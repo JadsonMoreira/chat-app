@@ -6,6 +6,7 @@ import { getMsgs, saveMsgs } from "../utils/storage";
 import s from "../utils/styles";
 import { getChatGlobal } from "../services/getChatGlobal";
 import { sendMenssage } from "../services/sendMenssage";
+import { getSocket } from "../services/socket";
 
 interface Message {
   id: string;
@@ -35,6 +36,27 @@ function ChatPage({ user, onLogout }: ChatPageProps) {
   const [messages, setMessages] = useState<Message[]>(() => getMsgs());
   const [chatId, setChatId] = useState<string>("");
 
+  async function loadChatGlobalMessages() {
+    try {
+      const response = await getChatGlobal();
+      const apiMessages = (response?.messages || []) as ApiMessage[];
+
+      const normalizedMessages: Message[] = apiMessages.map((item) => ({
+        id: item._id,
+        userId: normalizeId(typeof item.senderId === "object" ? item.senderId?._id : item.senderId),
+        userName: typeof item.senderId === "object" ? item.senderId?.name || "Usuário" : "Usuário",
+        text: item.content,
+        createdAt: item.createdAt,
+      }));
+
+      setChatId(response?.chat?._id || "");
+      setMessages(normalizedMessages);
+      saveMsgs(normalizedMessages);
+    } catch (error) {
+      console.error("Erro ao carregar chat global", error);
+    }
+  }
+
   async function handleSend(text: string) {
     if (!chatId) {
       console.error("Nenhum chat disponível para enviar mensagem.");
@@ -51,28 +73,25 @@ function ChatPage({ user, onLogout }: ChatPageProps) {
 
 
   useEffect(() => {
-    async function loadChatGlobal() {
-      try {
-        const response = await getChatGlobal();
-        const apiMessages = (response?.messages || []) as ApiMessage[];
+    loadChatGlobalMessages();
+  }, []);
 
-        const normalizedMessages: Message[] = apiMessages.map((item) => ({
-          id: item._id,
-          userId: normalizeId(typeof item.senderId === "object" ? item.senderId?._id : item.senderId),
-          userName: typeof item.senderId === "object" ? item.senderId?.name || "Usuário" : "Usuário",
-          text: item.content,
-          createdAt: item.createdAt,
-        }));
+  useEffect(() => {
+    const socket = getSocket();
 
-        setChatId(response?.chat?._id || "");
-        setMessages(normalizedMessages);
-        saveMsgs(normalizedMessages);
-      } catch (error) {
-        console.error("Erro ao carregar chat global", error);
-      }
+    if (!socket) {
+      return;
     }
 
-    loadChatGlobal();
+    const handleMessageNew = () => {
+      loadChatGlobalMessages();
+    };
+
+    socket.on("message:new", handleMessageNew);
+
+    return () => {
+      socket.off("message:new", handleMessageNew);
+    };
   }, []);
 
   return (
