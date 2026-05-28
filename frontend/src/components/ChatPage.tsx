@@ -6,7 +6,6 @@ import { getMsgs, saveMsgs } from "../utils/storage";
 import s from "../utils/styles";
 import { getChatGlobal } from "../services/getChatGlobal";
 import { sendMenssage } from "../services/sendMenssage";
-import { connectSocket } from "../services/socket";
 
 interface Message {
   id: string;
@@ -24,15 +23,16 @@ interface ApiMessage {
 }
 
 interface ChatPageProps {
-  user: { id: string; name: string; email: string; accessToken: string };
+  user: { id: string; name: string; email: string };
   onLogout: () => void;
+  realtimeTick: number;
 }
 
 function normalizeId(value: unknown): string {
   return String(value ?? "").trim();
 }
 
-function ChatPage({ user, onLogout }: ChatPageProps) {
+function ChatPage({ user, onLogout, realtimeTick }: ChatPageProps) {
   const [messages, setMessages] = useState<Message[]>(() => getMsgs());
   const [chatId, setChatId] = useState<string>("");
 
@@ -74,21 +74,7 @@ function ChatPage({ user, onLogout }: ChatPageProps) {
 
   useEffect(() => {
     loadChatGlobalMessages();
-  }, []);
-
-  useEffect(() => {
-    const socket = connectSocket(user.accessToken);
-
-    const handleMessageNew = () => {
-      loadChatGlobalMessages();
-    };
-
-    socket.on("message:new", handleMessageNew);
-
-    return () => {
-      socket.off("message:new", handleMessageNew);
-    };
-  }, [user.accessToken]);
+  }, [realtimeTick]);
 
   return (
     <div style={s.page}>

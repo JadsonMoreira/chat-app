@@ -24,6 +24,7 @@ function normalizeSession(data: any): SessionUser | null {
 }
 
 export default function App() {
+  const [realtimeTick, setRealtimeTick] = useState(0);
   const [user, setUser] = useState<SessionUser | null>(() => {
     const session = normalizeSession(getSession());
 
@@ -41,15 +42,22 @@ export default function App() {
       return;
     }
 
-    connectSocket(user.accessToken);
+    const socket = connectSocket(user.accessToken);
+
+    const handleMessageNew = () => {
+      setRealtimeTick((prev) => prev + 1);
+    };
+
+    socket.on("message:new", handleMessageNew);
 
     return () => {
+      socket.off("message:new", handleMessageNew);
       disconnectSocket();
     };
   }, [user?.accessToken]);
 
   function handleAuth(u: any) { saveSession(u); setUser(u); }
   function handleLogout() { clearSession(); setUser(null); }
-  return user ? <ChatPage user={user} onLogout={handleLogout} /> : <AuthPage onAuth={handleAuth} />;
+  return user ? <ChatPage user={user} onLogout={handleLogout} realtimeTick={realtimeTick} /> : <AuthPage onAuth={handleAuth} />;
 }
 
