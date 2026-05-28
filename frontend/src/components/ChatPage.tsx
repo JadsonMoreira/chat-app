@@ -6,7 +6,7 @@ import { getMsgs, saveMsgs } from "../utils/storage";
 import s from "../utils/styles";
 import { getChatGlobal } from "../services/getChatGlobal";
 import { sendMenssage } from "../services/sendMenssage";
-import { getSocket } from "../services/socket";
+import { connectSocket } from "../services/socket";
 
 interface Message {
   id: string;
@@ -24,7 +24,7 @@ interface ApiMessage {
 }
 
 interface ChatPageProps {
-  user: { id: string; name: string; email: string };
+  user: { id: string; name: string; email: string; accessToken: string };
   onLogout: () => void;
 }
 
@@ -77,11 +77,7 @@ function ChatPage({ user, onLogout }: ChatPageProps) {
   }, []);
 
   useEffect(() => {
-    const socket = getSocket();
-
-    if (!socket) {
-      return;
-    }
+    const socket = connectSocket(user.accessToken);
 
     const handleMessageNew = () => {
       loadChatGlobalMessages();
@@ -92,7 +88,7 @@ function ChatPage({ user, onLogout }: ChatPageProps) {
     return () => {
       socket.off("message:new", handleMessageNew);
     };
-  }, []);
+  }, [user.accessToken]);
 
   return (
     <div style={s.page}>
