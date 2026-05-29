@@ -1,8 +1,10 @@
 import { chatDb } from "../../collections/chatsDb"
 import { messageDb } from "../../collections/messagesDB"
 
-const findChat = async (usersId: string, chatId: string) => {
+const findChat = async (usersId: string) => {
         try {
+
+            const chatId = '6a123be1dad3b192f12a944c'
 
             const chat = await chatDb.findById(chatId).populate('users', 'name email socketId')
 

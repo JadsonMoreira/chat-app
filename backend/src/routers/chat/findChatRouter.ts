@@ -12,13 +12,6 @@ const findChatRouter = async (app: FastifyInstance) => {
         tags: ['Chat'],
         summary: 'Busca um chat específico do usuário',
         security: [{ bearerAuth: [] }],
-        params: {
-          type: 'object',
-          required: ['chatId'],
-          properties: {
-            chatId: { type: 'string' },
-          },
-        },
         response: {
           200: {
             type: 'object',
@@ -69,7 +62,7 @@ const findChatRouter = async (app: FastifyInstance) => {
       },
   }
 
-  app.get('/chat/:chatId', opts, findChatController as any)
+  app.get('/chat', opts, findChatController as any)
 }
 
 export { findChatRouter }

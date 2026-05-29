@@ -6,11 +6,8 @@ const findChatController = async (request: FastifyRequest, reply: FastifyReply) 
         const { userId} = request.user as {
             userId: string
         }
-        const { chatId } = request.params as {
-            chatId: string
-        }
 
-    const { chat, messages } = await findChat(userId, chatId)
+    const { chat, messages } = await findChat(userId)
 
      return reply.status(200).send({ message: 'Chat encontrado com sucesso', chat, messages })
     } catch (error: any) {
