@@ -77,6 +77,10 @@ const LoginForm = ({ onLogin, onToast }: LoginFormProps) => {
       <button onClick={handleLogin} disabled={loading} style={loading ? s.btnOff : s.btnPrimary}>
         {loading ? "Entrando..." : "Entrar"}
       </button>
+
+      <div style={{ textAlign: "center", marginTop: 24, color: "#888", fontSize: 13 }}>
+        Desenvolvido por Jadson Moreira
+      </div>
     </div>
   );
 }
