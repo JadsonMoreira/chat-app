@@ -6,7 +6,7 @@ const createUser = async (name: string, email: string, password: string) => {
         const findUser = await userDb.findOne({ email })
 
         if (findUser) {
-            throw new Error('Usuario já existe')
+            throw new Error('Usuario já existe, por favor escolha outro email')
         }
 
         const user = await userDb.create({
