@@ -8,10 +8,14 @@ const sendMessageController = async (request: FastifyRequest, reply: FastifyRepl
         const {chatId} = request.params as { chatId: string }
         const { content} = request.body as { content: string }
 
-        await sendMessage(userId, chatId, content)
+      const message = await sendMessage(userId, chatId, content)
 
-         const io = getIO()
-         io.emit("message:new", content)
+
+      
+        const io = getIO()
+        io.emit("message:new", message)
+
+  
 
         return reply.status(201).send({message: 'Mensagem enviada com sucesso'})
     } catch (error: any) {

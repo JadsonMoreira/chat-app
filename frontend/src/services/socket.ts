@@ -1,6 +1,7 @@
 import { io, Socket } from "socket.io-client";
 
 const SOCKET_URL = "https://chat-app-production-7cfc.up.railway.app";
+// const SOCKET_URL = "http://localhost:3000";
 
 let socket: Socket | null = null;
 
@@ -34,4 +35,4 @@ function getSocket(): Socket | null {
   return socket;
 }
 
-export { connectSocket, disconnectSocket, getSocket };
+export { connectSocket, disconnectSocket, getSocket, socket };

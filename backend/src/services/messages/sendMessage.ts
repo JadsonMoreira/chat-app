@@ -28,12 +28,14 @@ const sendMessage = async (senderId: string, chatId: string, content: string) =>
             if (!chat.users.includes(senderId as any)) {
                 chat.users.push(senderId as any)
             }
+
+            const messageChat = await messageDb.findOne({ _id: message._id }).populate('senderId', 'name email socketId').sort({ createdAt: 1 })
             
             chat.lastMessage = content
             chat.updatedAt = nowMinus3Hours
             await chat.save()
 
-             return message
+             return messageChat
 
         } catch (error: any) {
             throw new Error(error.message)

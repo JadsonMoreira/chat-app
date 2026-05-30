@@ -44,14 +44,24 @@ export default function App() {
 
     const socket = connectSocket(user.accessToken);
 
-    const handleMessageNew = () => {
-      setRealtimeTick((prev) => prev + 1);
-    };
+  socket.on("connect", () => {
+  console.log("CONECTOU", socket.id);
+});
 
-    socket.on("message:new", handleMessageNew);
+socket.on("connect_error", (err) => {
+  console.log("ERRO SOCKET", err);
+});
+
+socket.on("message:new", (data) => {
+  console.log("MESSAGE NEW RECEBIDO", data);
+  setRealtimeTick((prev) => prev + 1);
+});
+
+ 
+
 
     return () => {
-      socket.off("message:new", handleMessageNew);
+
       disconnectSocket();
     };
   }, [user?.accessToken]);

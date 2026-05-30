@@ -2,6 +2,7 @@ import axios from "axios";
 
 const api = axios.create({
   baseURL: "https://chat-app-production-7cfc.up.railway.app",
+  // baseURL: "http://localhost:3000",
 });
 
 api.interceptors.request.use((config) => {

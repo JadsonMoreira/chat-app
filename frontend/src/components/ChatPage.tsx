@@ -6,6 +6,7 @@ import { getMsgs, saveMsgs } from "../utils/storage";
 import s from "../utils/styles";
 import { getChatGlobal } from "../services/getChatGlobal";
 import { sendMenssage } from "../services/sendMenssage";
+import { getSocket } from "../services/socket";
 
 interface Message {
   id: string;
@@ -32,19 +33,27 @@ function normalizeId(value: unknown): string {
   return String(value ?? "").trim();
 }
 
-function ChatPage({ user, onLogout, realtimeTick }: ChatPageProps) {
+function ChatPage({ user, onLogout }: ChatPageProps) {
   const [messages, setMessages] = useState<Message[]>(() => getMsgs());
   const [chatId, setChatId] = useState<string>("");
 
   async function loadChatGlobalMessages() {
     try {
       const response = await getChatGlobal();
+
       const apiMessages = (response?.messages || []) as ApiMessage[];
 
       const normalizedMessages: Message[] = apiMessages.map((item) => ({
         id: item._id,
-        userId: normalizeId(typeof item.senderId === "object" ? item.senderId?._id : item.senderId),
-        userName: typeof item.senderId === "object" ? item.senderId?.name || "Usuário" : "Usuário",
+        userId: normalizeId(
+          typeof item.senderId === "object"
+            ? item.senderId?._id
+            : item.senderId
+        ),
+        userName:
+          typeof item.senderId === "object"
+            ? item.senderId?.name || "Usuário"
+            : "Usuário",
         text: item.content,
         createdAt: item.createdAt,
       }));
@@ -64,23 +73,57 @@ function ChatPage({ user, onLogout, realtimeTick }: ChatPageProps) {
     }
 
     await sendMenssage(chatId, text);
-
-    const msg = { id: Date.now().toString(), userId: user.id, userName: user.name, text, createdAt: new Date().toISOString() };
-    const updated = [...messages, msg];
-    setMessages(updated);
-    saveMsgs(updated);
   }
 
+  useEffect(() => {
+    const socket = getSocket();
+
+    if (!socket) {
+      return;
+    }
+
+    const handleMessageNew = (message: any) => {
+      const newMessage: Message = {
+        id: message._id,
+        userId: normalizeId(
+          typeof message.senderId === "object"
+            ? message.senderId?._id
+            : message.senderId
+        ),
+        userName:
+          typeof message.senderId === "object"
+            ? message.senderId?.name || "Usuário"
+            : "Usuário",
+        text: message.content,
+        createdAt: message.createdAt,
+      };
+
+      setMessages((prev) => {
+        const updated = [...prev, newMessage];
+        saveMsgs(updated);
+        return updated;
+      });
+    };
+
+    socket.on("message:new", handleMessageNew);
+
+    return () => {
+      socket.off("message:new", handleMessageNew);
+    };
+  }, []);
 
   useEffect(() => {
     loadChatGlobalMessages();
-  }, [realtimeTick]);
+  }, []);
 
   return (
     <div style={s.page}>
       <div style={s.chatWrap}>
         <ChatHeader user={user} onLogout={onLogout} />
-        <ChatMessages messages={messages} userId={normalizeId(user.id)} />
+        <ChatMessages
+          messages={messages}
+          userId={normalizeId(user.id)}
+        />
         <ChatInput onSend={handleSend} />
       </div>
     </div>
